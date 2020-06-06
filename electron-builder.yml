@@ -1,0 +1,38 @@
+appId: se.pengi.nodeflight
+copyright: Max Sikström
+productName: NodeFlightUI
+
+directories:
+  buildResources: assets/
+  output: dist/
+
+files:
+  - package.json
+  - build/
+  - node_modules/
+
+dmg:
+  iconSize: 80
+  window:
+    width: 500
+    height: 300
+  contents:
+    - type: file
+      x: 110
+      y: 110
+    - type: link
+      path: /Applications
+      x: 310
+      y: 110
+
+mac:
+  target: dmg
+  category: public.app-category.utilities
+
+win:
+  target: nsis
+
+linux:
+  target:
+    - deb
+    - AppImage

@@ -1,0 +1,57 @@
+{
+  "name": "nodeflight-ui",
+  "version": "0.1.0",
+  "description": "NodeFlight configuration and maintenance interface",
+  "main": "build/main/index.js",
+  "author": {
+    "name": "Max Sikström",
+    "email": "max@pengi.se",
+    "url": "https://github.com/pengi"
+  },
+  "homepage": "https://github.com/nodeflight/nodeflight-ui",
+  "repository": "https://github.com/nodeflight/nodeflight-ui",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@material-ui/core": "^4.10.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.0",
+    "react-redux": "^7.2.0",
+    "react-router": "^5.2.0",
+    "redux": "^4.0.5",
+    "redux-actions": "^2.6.5",
+    "redux-localstorage": "^0.4.1",
+    "redux-thunk": "^2.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
+    "@babel/preset-react": "^7.10.1",
+    "browser-sync": "^2.26.7",
+    "electron": "^8.3.1",
+    "electron-builder": "^22.7.0",
+    "electron-devtools-installer": "^3.0.0",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-inject-string": "^1.1.2",
+    "gulp-sourcemaps": "^2.6.5",
+    "rimraf": "^3.0.2"
+  },
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "develop": "gulp develop",
+    "pack": "gulp pack"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "electron": "8.3.1"
+          }
+        }
+      ],
+      "@babel/preset-react"
+    ]
+  }
+}
