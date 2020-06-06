@@ -137,13 +137,13 @@ task(
       namedTask("watch-electron", (done) =>
         watchers.push({
           watcher: watch(
-            ["src/app/**/*.js"],
+            ["src/main/**/*.js"],
             series(build_develop, electron_restart)
           ),
           done,
         })
       ),
-      namedTask("watch-ui", (done) =>
+      namedTask("watch-app", (done) =>
         watchers.push({
           watcher: watch(
             ["src/app/**/*.js"],
