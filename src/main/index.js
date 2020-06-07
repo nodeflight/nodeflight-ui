@@ -1,6 +1,9 @@
 import path from "path";
 import { app, crashReporter, BrowserWindow } from "electron";
 
+import { serial_init } from "./serial";
+import { ipcMain as ipc } from "electron";
+
 crashReporter.start({
   companyName: "NodeFlight",
   submitURL: "https://github.com/nodeflight/nodeflight-ui/issues",
@@ -10,6 +13,8 @@ const is_dev = process.env.NODE_ENV === "development";
 var mainWindow = null;
 
 app.allowRendererProcessReuse = true;
+
+serial_init(ipc);
 
 app.on("window-all-closed", () => {
   /* One app - one window, ignore macOS convention */

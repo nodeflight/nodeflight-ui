@@ -5,15 +5,25 @@ import { appSetTab } from "../actions/app";
 
 import { Tabs, Tab } from "@material-ui/core";
 
+import TabAbout from "./TabAbout";
+import TabConnect from "./TabConnect";
+
+const tabcontents = {
+  about: () => <TabAbout />,
+  connect: () => <TabConnect />,
+  tab_two: () => <div>TabTwo</div>,
+  tab_three: () => <div>TabThree</div>,
+};
 
 const App = ({ tab_id, setTab }) => (
   <React.Fragment>
     <Tabs value={tab_id} onChange={(ev, val) => setTab(val)}>
-      <Tab label="Connection" />
-      <Tab label="Item Two" />
-      <Tab label="Item Three" />
+      <Tab value="about" label="About" />
+      <Tab value="connect" label="Connection" />
+      <Tab value="tab_two" label="Item Two" />
+      <Tab value="tab_three" label="Item Three" />
     </Tabs>
-    <div>test</div>
+    {tabcontents[tab_id]()}
   </React.Fragment>
 );
 
