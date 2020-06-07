@@ -3,13 +3,21 @@ import ReactDOM from "react-dom";
 import { createStore } from "redux";
 import { Provider } from "react-redux";
 
-import { Button } from "@material-ui/core";
+import { CssBaseline, ThemeProvider } from "@material-ui/core";
 
-const store = createStore((state = {}, action) => state);
+import theme from "./theme";
+
+import App from "./components/App";
+import rootReducer from "./reducers";
+
+const store = createStore(rootReducer);
 
 ReactDOM.render(
   <Provider store={store}>
-    <Button>A button</Button>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>
   </Provider>,
   document.getElementById("root")
 );
