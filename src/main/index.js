@@ -14,8 +14,6 @@ var mainWindow = null;
 
 app.allowRendererProcessReuse = true;
 
-serial_init(ipc);
-
 app.on("window-all-closed", () => {
   /* One app - one window, ignore macOS convention */
   app.quit();
@@ -41,7 +39,7 @@ app.on("ready", async () => {
 
   mainWindow = new BrowserWindow({
     width: 1000,
-    height: 800,
+    height: 1000,
     webPreferences: {
       nodeIntegration: true,
     },
@@ -61,4 +59,6 @@ app.on("ready", async () => {
       mainWindow.webContents.openDevTools();
     });
   }
+
+  serial_init(ipc, mainWindow.webContents);
 });

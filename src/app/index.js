@@ -7,6 +7,7 @@ import ReduxThunk from "redux-thunk";
 import { CssBaseline, ThemeProvider } from "@material-ui/core";
 
 import theme from "./theme";
+import serial_register from "./external/serial";
 
 import App from "./components/App";
 import rootReducer from "./reducers";
@@ -22,3 +23,5 @@ ReactDOM.render(
   </Provider>,
   document.getElementById("root")
 );
+
+serial_register(store);

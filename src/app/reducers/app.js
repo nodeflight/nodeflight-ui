@@ -1,5 +1,5 @@
 const app_default = {
-  tab_id: "about",
+  tab_id: "connect",
 };
 
 export default (state = app_default, action) => {
