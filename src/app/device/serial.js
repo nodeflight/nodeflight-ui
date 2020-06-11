@@ -1,4 +1,4 @@
-import { serial_update } from "../actions/serial";
+import { serial_update } from "./actions/serial";
 import { ipcRenderer as ipc } from "electron";
 
 export default (store) => {

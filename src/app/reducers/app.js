@@ -1,5 +1,5 @@
 const app_default = {
-  tab_id: "connect",
+  tab_id: "device",
 };
 
 export default (state = app_default, action) => {
