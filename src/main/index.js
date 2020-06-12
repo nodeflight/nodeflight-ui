@@ -60,5 +60,5 @@ app.on("ready", async () => {
     });
   }
 
-  serial_init(ipc, mainWindow.webContents);
+  serial_init(ipc, mainWindow);
 });

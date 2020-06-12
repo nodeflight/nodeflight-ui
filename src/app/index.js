@@ -12,6 +12,8 @@ import serial_register from "./device/serial";
 import App from "./components/App";
 import rootReducer from "./reducers";
 
+import { ipcRenderer as ipc } from "electron";
+
 const store = createStore(rootReducer, applyMiddleware(ReduxThunk));
 
 ReactDOM.render(
@@ -25,3 +27,5 @@ ReactDOM.render(
 );
 
 serial_register(store);
+
+ipc.send("page-load");
