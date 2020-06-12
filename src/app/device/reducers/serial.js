@@ -1,12 +1,15 @@
 const serial_default = {
-  ports: [],
-  session: null
+  ports_available: {},
+  port: null,
+  session: null,
 };
 
 export default (state = serial_default, action) => {
   switch (action.type) {
-    case "SERIAL_PORTS_UPDATE":
-      return { ...state, ports: action.ports };
+    case "DEVICE_LIST_UPDATE":
+      return { ...state, ports_available: action.ports };
+    case "DEVICE_SELECT":
+      return { ...state, port: action.port };
     default:
       return state;
   }

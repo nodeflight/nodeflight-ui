@@ -1,13 +1,11 @@
-import { ipcRenderer as ipc } from "electron";
-
-const serial_update = (ports) => ({
-  type: "SERIAL_PORTS_UPDATE",
+const device_list_update = (ports) => ({
+  type: "DEVICE_LIST_UPDATE",
   ports,
 });
 
-const serial_list = () => async (dispatch) => {
-  const ports = await ipc.invoke("serial-ports-list");
-  dispatch(serial_update(ports));
-};
+const device_select = (port) => ({
+  type: "DEVICE_SELECT",
+  port,
+});
 
-export { serial_update, serial_list };
+export { device_list_update, device_select };
