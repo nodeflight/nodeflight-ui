@@ -13,13 +13,42 @@ const SERIAL_PORT_CONFIG = {
 };
 
 class SerialConnection {
-  constructor(device) {
-    this.device = device;
-    console.log("Connect", this.device);
+  constructor(device, send) {
+    this.send = send;
+    this.port = new SerialPort(device, {
+      ...SERIAL_PORT_CONFIG,
+      autoOpen: true,
+    });
+    this.port.on("open", () => this._on_open());
+    this.port.on("close", () => this._on_close());
+    this.port.on("error", (error) => this._on_error(error));
+    this.port.on("data", (buffer) => this._on_data(buffer));
+    this.port.on("drain", () => this._on_drain());
   }
 
   close() {
-    console.log("Close connection", this.device);
+    this.port.close();
+    this.port = null;
+  }
+
+  get_device() {
+    return this.port.path;
+  }
+
+  _on_open() {
+    console.log("_on_open");
+  }
+  _on_close() {
+    console.log("_on_close");
+  }
+  _on_error(error) {
+    console.log("_on_error", error);
+  }
+  _on_data(buffer) {
+    console.log("_on_data", buffer);
+  }
+  _on_drain() {
+    console.log("_on_drain");
   }
 }
 
@@ -57,6 +86,10 @@ class SerialList {
   periodic(send) {
     return this.tq.run(() => this._do_refresh(send));
   }
+
+  is_device_available(device) {
+    return !!this.devices_available[device];
+  }
 }
 
 const handle_error = (error) => {
@@ -66,26 +99,41 @@ const handle_error = (error) => {
 export const serial_init = (ipc, win) => {
   const slist = new SerialList();
   var sconn = null;
+  var device_selected = null;
 
   /* Generic function to reply back with an event */
   const send = (...args) => win.webContents.send(...args);
 
   ipc.on("device-select", (event, device) => {
+    device_selected = device;
     if (sconn) {
       sconn.close();
       sconn = null;
     }
     if (device) {
-      sconn = new SerialConnection(device);
+      sconn = new SerialConnection(device_selected, send);
     }
   });
   ipc.on("page-load", (event) => {
     slist.page_load(send);
     if (sconn) {
-      send("device-select", sconn.device);
+      send("device-select", sconn.get_device());
     } else {
       send("device-select", null);
     }
   });
-  call_periodic(() => slist.periodic(send), SERIAL_PORT_LIST_INTERVAL);
+  call_periodic(async () => {
+    await slist.periodic(send);
+    if (sconn && !slist.is_device_available(sconn.get_device())) {
+      sconn.close();
+      sconn = null;
+    }
+    if (
+      !sconn &&
+      device_selected &&
+      slist.is_device_available(device_selected)
+    ) {
+      sconn = new SerialConnection(device_selected, send);
+    }
+  }, SERIAL_PORT_LIST_INTERVAL);
 };
