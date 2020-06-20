@@ -1,56 +1,10 @@
 import SerialPort from "serialport";
 import TaskQueue from "../lib/taskqueue";
-import { delay, call_periodic } from "../lib/tasktime";
+import { call_periodic } from "../lib/tasktime";
+import NfcpClient from "../lib/nfcp";
 
 const SERIAL_PORT_LIST_INTERVAL = 2000;
 
-const SERIAL_PORT_CONFIG = {
-  baudRate: 230400,
-  parity: "none",
-  stopBits: 1,
-  dataBits: 8,
-  flowControl: false,
-};
-
-class SerialConnection {
-  constructor(device, send) {
-    this.send = send;
-    this.port = new SerialPort(device, {
-      ...SERIAL_PORT_CONFIG,
-      autoOpen: true,
-    });
-    this.port.on("open", () => this._on_open());
-    this.port.on("close", () => this._on_close());
-    this.port.on("error", (error) => this._on_error(error));
-    this.port.on("data", (buffer) => this._on_data(buffer));
-    this.port.on("drain", () => this._on_drain());
-  }
-
-  close() {
-    this.port.close();
-    this.port = null;
-  }
-
-  get_device() {
-    return this.port.path;
-  }
-
-  _on_open() {
-    console.log("_on_open");
-  }
-  _on_close() {
-    console.log("_on_close");
-  }
-  _on_error(error) {
-    console.log("_on_error", error);
-  }
-  _on_data(buffer) {
-    console.log("_on_data", buffer);
-  }
-  _on_drain() {
-    console.log("_on_drain");
-  }
-}
 
 class SerialList {
   constructor() {
@@ -111,7 +65,7 @@ export const serial_init = (ipc, win) => {
       sconn = null;
     }
     if (device) {
-      sconn = new SerialConnection(device_selected, send);
+      sconn = new NfcpClient(device_selected, send);
     }
   });
   ipc.on("page-load", (event) => {
@@ -133,7 +87,7 @@ export const serial_init = (ipc, win) => {
       device_selected &&
       slist.is_device_available(device_selected)
     ) {
-      sconn = new SerialConnection(device_selected, send);
+      sconn = new NfcpClient(device_selected, send);
     }
   }, SERIAL_PORT_LIST_INTERVAL);
 };
