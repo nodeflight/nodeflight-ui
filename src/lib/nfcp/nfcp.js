@@ -5,6 +5,8 @@ import EventEmitter from "events";
 
 const clsop = (cls, op) => (cls << 8) | op;
 
+const KEEPALIVE_INTERVAL = 1000;
+
 const SERIAL_PORT_CONFIG = {
   baudRate: 230400,
   parity: "none",
@@ -36,9 +38,15 @@ const pack_msg = (clsop, is_call, payload) => {
 };
 
 class NfcpClient extends EventEmitter {
-  constructor(device, send) {
+  constructor(device) {
     super({});
-    this.send = send;
+
+    this.remote = {
+      version: null,
+      connected: false,
+    };
+    this.keepalive_timeout = false;
+
     this.port = new SerialPort(device, {
       ...SERIAL_PORT_CONFIG,
       autoOpen: true,
@@ -54,13 +62,18 @@ class NfcpClient extends EventEmitter {
     this.tx = new NFCPPack();
     this.tx.pipe(new HDLCFrameEncoder()).pipe(this.port);
 
+    this.last_seq_nr = 0;
+
+    this.active_calls = {};
+
     do {
       this.session_id = Math.floor(Math.random() * Math.floor(0x100000000));
     } while (this.session_id == 0);
+  }
 
-    /* Abort sequence */
-    this.tx.push(false);
-    this._send_session_id();
+  _get_seq_nr() {
+    this.last_seq_nr = (this.last_seq_nr % 255) + 1;
+    return this.last_seq_nr;
   }
 
   close() {
@@ -72,32 +85,133 @@ class NfcpClient extends EventEmitter {
     return this.port.path;
   }
 
-  call(cls_op, payload) {}
+  has_timeout() {
+    return !this.remote.connected;
+  }
 
-  inform(cls_op, payload) {}
-
-  _send_session_id() {
-    this.tx.write({
-      cls: "mgmt",
-      is_call: true,
+  async send(pkt) {
+    const pkt_filled = {
+      is_call: false,
       is_resp: false,
-      seq_nr: 13,
-      op: "session_id",
-      session_id: this.session_id,
-    });
+      ...pkt,
+      seq_nr: this._get_seq_nr(),
+    };
+
+    let call_promise = null;
+
+    if (pkt_filled.is_call) {
+      call_promise = new Promise((resolve, reject) => {
+        this.active_calls[pkt_filled.seq_nr] = { resolve, reject };
+      });
+    }
+
+    await new Promise((resolve, reject) =>
+      this.tx.write(pkt_filled, undefined, resolve)
+    );
+
+    if (pkt_filled.is_call) {
+      return await call_promise;
+    } else {
+      return null;
+    }
   }
 
   _on_open() {
-    console.log("_on_open");
+    /* Abort sequence */
+    this.tx.write(false);
+    this.send({
+      cls: "mgmt",
+      op: "session_id",
+      is_call: true,
+      session_id: this.session_id,
+    })
+      .then((result) => {
+        if (result.version) {
+          console.log("Connected to", result.version);
+          this.remote.version = result.version;
+          this.remote.connected = true;
+          this._keepalive();
+        } else {
+          throw new Error("Can't start session");
+        }
+      })
+      .catch((err) => {
+        this.close();
+        console.log("Can't send session_id", err);
+      });
   }
+
+  _keepalive() {
+    this.send({
+      cls: "mgmt",
+      op: "session_id",
+      is_call: true,
+      session_id: this.session_id,
+    })
+      .then((result) => {
+        if (result.version) {
+          throw new Error("Session restarted");
+        } else {
+          this.keepalive_timeout = setTimeout(
+            () => this._keepalive(),
+            KEEPALIVE_INTERVAL
+          );
+        }
+      })
+      .catch((err) => {
+        this.close();
+        console.log("Can't send session_id", err);
+      });
+  }
+
   _on_close() {
     console.log("_on_close");
+    clearTimeout(this.keepalive_timeout);
+    this.keepalive_timeout = false;
+    this.remote.connected = false;
   }
   _on_error(error) {
     console.log("_on_error", error);
   }
-  _on_data(buffer) {
-    console.log("_on_data", buffer);
+  _on_data(pkt) {
+    if (pkt.is_resp && pkt.is_call) {
+      /* Response, can only be from a call */
+      if (this.active_calls[pkt.seq_nr]) {
+        this.active_calls[pkt.seq_nr].resolve(pkt);
+        delete this.active_calls[pkt.seq_nr];
+      } else {
+        /* Unknown sequence number */
+        console.log("Unknown call response", pkt);
+      }
+    }
+    if (!pkt.is_resp) {
+      /* Message from device to client */
+      if (pkt.is_call) {
+        /* Call, requires response, not yet implemented */
+      } else {
+        /* Information message */
+        if (
+          pkt.cls == "mgmt" &&
+          (pkt.op == "invalid_cls" || pkt.op == "invalid_op") &&
+          pkt.pkt_is_call
+        ) {
+          /* Invalid class and invalid op as response to a call should abort the call */
+          if (this.active_calls[pkt.pkt_seq_nr]) {
+            this.active_calls[pkt.pkt_seq_nr].reject(pkt.op);
+            delete this.active_calls[pkt.pkt_seq_nr];
+          } else {
+            /* Unknown sequence number */
+            console.log("Invalid cls/op to unknown call", pkt);
+          }
+        } else {
+          const is_processed = this.emit("info", pkt);
+          if (!is_processed) {
+            console.log("Unhandled info message", pkt);
+            /* No handler, which should according to spec reply with an unknown handler info. FW doesn't care, so don't implement for now... */
+          }
+        }
+      }
+    }
   }
   _on_drain() {
     console.log("_on_drain");

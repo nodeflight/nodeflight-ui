@@ -5,7 +5,6 @@ import NfcpClient from "../lib/nfcp/nfcp";
 
 const SERIAL_PORT_LIST_INTERVAL = 2000;
 
-
 class SerialList {
   constructor() {
     this.devices_available = {};
@@ -50,9 +49,21 @@ const handle_error = (error) => {
   console.error(error);
 };
 
+const connect = (device) => {
+  const cli = new NfcpClient(device);
+  cli.on("info", (pkt) => {
+    if (pkt.cls == "mgmt" && pkt.op == "log_message") {
+      console.log(pkt.message);
+    } else {
+      console.log(pkt);
+    }
+  });
+  return cli;
+};
+
 export const serial_init = (ipc, win) => {
   const slist = new SerialList();
-  var sconn = null;
+  var cli = null;
   var device_selected = null;
 
   /* Generic function to reply back with an event */
@@ -60,17 +71,17 @@ export const serial_init = (ipc, win) => {
 
   ipc.on("device-select", (event, device) => {
     device_selected = device;
-    if (sconn) {
-      sconn.close();
-      sconn = null;
+    if (cli) {
+      cli.close();
+      cli = null;
     }
     if (device) {
-      sconn = new NfcpClient(device_selected, send);
+      cli = connect(device_selected);
     }
   });
   ipc.on("page-load", (event) => {
     slist.page_load(send);
-    if (sconn) {
+    if (cli) {
       send("device-select", sconn.get_device());
     } else {
       send("device-select", null);
@@ -78,16 +89,15 @@ export const serial_init = (ipc, win) => {
   });
   call_periodic(async () => {
     await slist.periodic(send);
-    if (sconn && !slist.is_device_available(sconn.get_device())) {
-      sconn.close();
-      sconn = null;
-    }
     if (
-      !sconn &&
-      device_selected &&
-      slist.is_device_available(device_selected)
+      cli &&
+      (!slist.is_device_available(cli.get_device()) || cli.has_timeout())
     ) {
-      sconn = new NfcpClient(device_selected, send);
+      cli.close();
+      cli = null;
+    }
+    if (!cli && device_selected && slist.is_device_available(device_selected)) {
+      cli = connect(device_selected);
     }
   }, SERIAL_PORT_LIST_INTERVAL);
 };
