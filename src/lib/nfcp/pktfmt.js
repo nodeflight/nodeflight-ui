@@ -44,12 +44,20 @@ const nfcp_packet = new BinFmt()
 
 class NFCPPack extends Transform {
   constructor(opts = {}) {
-    super({ writeableObjectMode: true, readableObjectMode: true, ...opts });
+    super({
+      objectMode: true,
+      ...opts,
+    });
   }
 
   _transform(chunk, enc, cb) {
-    console.log("NFCP pack", chunk);
-    this.push(chunk);
+    if (chunk === false) {
+      /* Abort sequence, pass to next layer */
+      this.push(false);
+      cb();
+      return;
+    }
+    this.push(nfcp_packet.pack(chunk));
     cb();
   }
 
@@ -60,7 +68,10 @@ class NFCPPack extends Transform {
 
 class NFCPUnpack extends Transform {
   constructor(opts = {}) {
-    super({ writeableObjectMode: true, readableObjectMode: true, ...opts });
+    super({
+      objectMode: true,
+      ...opts,
+    });
   }
 
   _transform(chunk, enc, cb) {

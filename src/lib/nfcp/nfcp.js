@@ -51,14 +51,15 @@ class NfcpClient extends EventEmitter {
     this.rx = this.port.pipe(new HDLCFrameDecoder()).pipe(new NFCPUnpack());
     this.rx.on("data", (buffer) => this._on_data(buffer));
 
-    this.tx = new HDLCFrameEncoder();
-    this.tx.pipe(new NFCPPack()).pipe(this.port);
+    this.tx = new NFCPPack();
+    this.tx.pipe(new HDLCFrameEncoder()).pipe(this.port);
 
     do {
       this.session_id = Math.floor(Math.random() * Math.floor(0x100000000));
     } while (this.session_id == 0);
 
-    this.tx.write_abort();
+    /* Abort sequence */
+    this.tx.push(false);
     this._send_session_id();
   }
 
@@ -76,14 +77,14 @@ class NfcpClient extends EventEmitter {
   inform(cls_op, payload) {}
 
   _send_session_id() {
-    const sess_msg = pack_msg("mgmt_session_id", true, [
-      0x00,
-      0x12,
-      0x13,
-      0x14,
-      0x19,
-    ]);
-    this.tx.write(sess_msg);
+    this.tx.write({
+      cls: "mgmt",
+      is_call: true,
+      is_resp: false,
+      seq_nr: 13,
+      op: "session_id",
+      session_id: this.session_id,
+    });
   }
 
   _on_open() {

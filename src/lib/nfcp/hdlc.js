@@ -26,10 +26,20 @@ const crc16ccitt = (buf) =>
 
 class HDLCFrameEncoder extends Transform {
   constructor(opts = {}) {
-    super({ writeableObjectMode: true, ...opts });
+    super({
+      objectMode: true,
+      ...opts,
+    });
   }
 
   _transform(chunk, enc, cb) {
+    if (chunk === false) {
+      /* Abort sequence */
+      this.push(Buffer.from([HDLC_ESCAPE_CHAR, HDLC_FRAME_BOUNDARY]));
+      cb();
+      return;
+    }
+
     /* Add CRC to packet */
     const crc_pkt = crc16ccitt(chunk);
     let pkt = Buffer.concat([
@@ -79,15 +89,14 @@ class HDLCFrameEncoder extends Transform {
   _flush(cb) {
     cb();
   }
-
-  write_abort() {
-    this.push(Buffer.from([HDLC_ESCAPE_CHAR, HDLC_FRAME_BOUNDARY]));
-  }
 }
 
 class HDLCFrameDecoder extends Transform {
   constructor(opts = {}) {
-    super({ readableObjectMode: true, ...opts });
+    super({
+      objectMode: false,
+      ...opts,
+    });
     this.buffer = Buffer.alloc(0);
   }
 
