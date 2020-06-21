@@ -1,0 +1,76 @@
+import { Transform } from "stream";
+import BinFmt from "../binfmt";
+
+const nfcp_packet = new BinFmt()
+  .enum("cls", 6, {
+    mgmt: 0,
+  })
+  .bool("is_call")
+  .bool("is_resp")
+  .choose((obj) => obj.cls, {
+    mgmt: new BinFmt().enum("op", 8, {
+      session_id: 0,
+      log_message: 1,
+      invalid_cls: 2,
+      invalid_op: 3,
+    }),
+  })
+  .choose((obj) => obj.is_call, {
+    false: new BinFmt(),
+    true: new BinFmt().uint("seq_nr", 8),
+  })
+  .choose(
+    (obj) =>
+      obj.cls +
+      "_" +
+      obj.op +
+      (!obj.is_call ? "_info" : obj.is_resp ? "_resp" : "_req"),
+    {
+      mgmt_session_id_req: new BinFmt().uint("session_id", 32),
+      mgmt_session_id_resp: new BinFmt().cstr("version"),
+      mgmt_log_message_info: new BinFmt().cstr("message"),
+      mgmt_invalid_cls_info: new BinFmt()
+        .uint("pkt_cls", 6)
+        .bool("pkt_is_call")
+        .bool("pkt_is_resp")
+        .uint("pkt_op", 8),
+      mgmt_invalid_op_info: new BinFmt()
+        .uint("pkt_cls", 6)
+        .bool("pkt_is_call")
+        .bool("pkt_is_resp")
+        .uint("pkt_op", 8),
+    }
+  );
+
+class NFCPPack extends Transform {
+  constructor(opts = {}) {
+    super({ writeableObjectMode: true, readableObjectMode: true, ...opts });
+  }
+
+  _transform(chunk, enc, cb) {
+    console.log("NFCP pack", chunk);
+    this.push(chunk);
+    cb();
+  }
+
+  _flush(cb) {
+    cb();
+  }
+}
+
+class NFCPUnpack extends Transform {
+  constructor(opts = {}) {
+    super({ writeableObjectMode: true, readableObjectMode: true, ...opts });
+  }
+
+  _transform(chunk, enc, cb) {
+    this.push(nfcp_packet.unpack(chunk).value);
+    cb();
+  }
+
+  _flush(cb) {
+    cb();
+  }
+}
+
+export { NFCPPack, NFCPUnpack };

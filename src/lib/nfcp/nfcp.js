@@ -1,5 +1,6 @@
 import SerialPort from "serialport";
 import { HDLCFrameDecoder, HDLCFrameEncoder } from "./hdlc";
+import { NFCPPack, NFCPUnpack } from "./pktfmt";
 import EventEmitter from "events";
 
 const clsop = (cls, op) => (cls << 8) | op;
@@ -47,11 +48,11 @@ class NfcpClient extends EventEmitter {
     this.port.on("error", (error) => this._on_error(error));
     this.port.on("drain", () => this._on_drain());
 
-    this.rx = this.port.pipe(new HDLCFrameDecoder());
+    this.rx = this.port.pipe(new HDLCFrameDecoder()).pipe(new NFCPUnpack());
     this.rx.on("data", (buffer) => this._on_data(buffer));
 
     this.tx = new HDLCFrameEncoder();
-    this.tx.pipe(this.port);
+    this.tx.pipe(new NFCPPack()).pipe(this.port);
 
     do {
       this.session_id = Math.floor(Math.random() * Math.floor(0x100000000));

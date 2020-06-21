@@ -1,7 +1,7 @@
 import SerialPort from "serialport";
 import TaskQueue from "../lib/taskqueue";
 import { call_periodic } from "../lib/tasktime";
-import NfcpClient from "../lib/nfcp";
+import NfcpClient from "../lib/nfcp/nfcp";
 
 const SERIAL_PORT_LIST_INTERVAL = 2000;
 
