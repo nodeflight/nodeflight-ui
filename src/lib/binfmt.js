@@ -1,23 +1,39 @@
 const dict_flip = (dict) =>
   Object.fromEntries(Object.entries(dict).map(([k, v]) => [v, k]));
 
-const uint_read = (buf, offset, len) => {
-  // Calculate start and length of bytes in buffer containing the integer
-  const offset_bytes = offset >> 3;
-  const len_bytes = ((offset + len + 7) >> 3) - offset_bytes;
+class BitBuf {
+  constructor(buf) {
+    if (buf) {
+      this.buffer = buf;
+      this.size = buf.length * 8;
+    } else {
+      this.buffer = Buffer.alloc(32);
+      this.size = 0;
+    }
+  }
 
-  // Calculate bits offset from LSB (end)
-  const offset_bits = 7 - ((offset + len + 7) & 7);
+  read_uint(offset, len) {
+    if (offset + len > this.size) {
+      throw new Error("Read out of bounds");
+    }
 
-  // Calculate bitmask, to apply after shift
-  const len_mask = 2 ** len - 1;
+    // Calculate start and length of bytes in buffer containing the integer
+    const offset_bytes = offset >> 3;
+    const len_bytes = ((offset + len + 7) >> 3) - offset_bytes;
 
-  // Fetch data
-  const raw_uint = buf.readUIntBE(offset_bytes, len_bytes);
+    // Calculate bits offset from LSB (end)
+    const offset_bits = 7 - ((offset + len + 7) & 7);
 
-  // Mask out
-  return (raw_uint >> offset_bits) & len_mask;
-};
+    // Calculate bitmask, to apply after shift
+    const len_mask = 2 ** len - 1;
+
+    // Fetch data
+    const raw_uint = this.buffer.readUIntBE(offset_bytes, len_bytes);
+
+    // Mask out
+    return (raw_uint >> offset_bits) & len_mask;
+  }
+}
 
 class BinFmt {
   constructor(fields = []) {
@@ -29,8 +45,8 @@ class BinFmt {
       ...this.fields,
       {
         name,
-        unpack: (buf, offset, obj) => ({
-          value: uint_read(buf, offset, len),
+        _unpack: (buf, offset, obj) => ({
+          value: buf.read_uint(offset, len),
           len: len,
         }),
       },
@@ -42,8 +58,8 @@ class BinFmt {
       ...this.fields,
       {
         name,
-        unpack: (buf, offset, obj) => ({
-          value: uint_read(buf, offset, 1) != 0,
+        _unpack: (buf, offset, obj) => ({
+          value: buf.read_uint(offset, 1) != 0,
           len: 1,
         }),
       },
@@ -55,16 +71,21 @@ class BinFmt {
       ...this.fields,
       {
         name,
-        unpack: (buf, offset, obj) => {
+        _unpack: (buf, offset, obj) => {
           if (offset & (0x07 != 0)) {
             throw new Error("cstr must be byte aligned");
           }
+          /* TODO: No direct access to buffer */
           const offset_byte = offset >> 3;
-          const end_byte = buf.indexOf(0, offset_byte);
+          const end_byte = buf.buffer.indexOf(0, offset_byte);
           const length_byte =
-            end_byte < 0 ? buf.length - offset_byte : end_byte - offset_byte;
+            end_byte < 0
+              ? buf.buffer.length - offset_byte
+              : end_byte - offset_byte;
           return {
-            value: buf.slice(offset_byte, offset_byte + length_byte).toString(),
+            value: buf.buffer
+              .slice(offset_byte, offset_byte + length_byte)
+              .toString(),
             len: length_byte * 8 + (end_byte < 0 ? 0 : 8),
           };
         },
@@ -78,8 +99,8 @@ class BinFmt {
       ...this.fields,
       {
         name,
-        unpack: (buf, offset, obj) => ({
-          value: values_rev[uint_read(buf, offset, len)],
+        _unpack: (buf, offset, obj) => ({
+          value: values_rev[buf.read_uint(offset, len)],
           len: len,
         }),
       },
@@ -90,10 +111,10 @@ class BinFmt {
     return new BinFmt([
       ...this.fields,
       {
-        unpack: (buf, offset, obj) => {
-          const type_id = selector(obj, buf, offset);
+        _unpack: (buf, offset, obj) => {
+          const type_id = selector(obj);
           if (types[type_id]) {
-            return types[type_id].unpack(buf, offset, obj);
+            return types[type_id]._unpack(buf, offset, obj);
           } else {
             throw new Error("Unknown type " + type_id);
           }
@@ -102,16 +123,10 @@ class BinFmt {
     ]);
   }
 
-  unpack(buf, offset, obj) {
-    if (!offset) {
-      offset = 0;
-    }
-    if (!obj) {
-      obj = {};
-    }
+  _unpack(buf, offset, obj) {
     let pos = 0;
-    for (const { name, unpack } of this.fields) {
-      const { value, len } = unpack(buf, offset + pos, obj);
+    for (const { name, _unpack } of this.fields) {
+      const { value, len } = _unpack(buf, offset + pos, obj);
       if (name) {
         obj[name] = value;
       } else {
@@ -120,6 +135,10 @@ class BinFmt {
       pos += len;
     }
     return { value: obj, len: pos };
+  }
+
+  unpack(buf) {
+    return this._unpack(new BitBuf(buf), 0, {}).value;
   }
 }
 

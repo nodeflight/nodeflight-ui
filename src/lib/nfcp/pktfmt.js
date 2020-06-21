@@ -64,7 +64,7 @@ class NFCPUnpack extends Transform {
   }
 
   _transform(chunk, enc, cb) {
-    this.push(nfcp_packet.unpack(chunk).value);
+    this.push(nfcp_packet.unpack(chunk));
     cb();
   }
 
