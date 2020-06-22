@@ -1,6 +1,9 @@
 import SerialPort from "serialport";
 import { HDLCFrameDecoder, HDLCFrameEncoder } from "../stream/hdlc";
-import { BinFmtStreamEncoder, BinFmtStreamDecoder } from "../stream/binfmt_stream";
+import {
+  BinFmtStreamEncoder,
+  BinFmtStreamDecoder,
+} from "../stream/binfmt_stream";
 import nfcp_packet from "./nfcp_packet";
 import EventEmitter from "events";
 
@@ -54,7 +57,7 @@ class NfcpClient extends EventEmitter {
     });
     this.port.on("open", () => this._on_open());
     this.port.on("close", () => this._on_close());
-    this.port.on("error", (error) => console.log("serial port error", error));
+    this.port.on("error", (error) => this._on_error(error));
     this.port.on("drain", () => console.log("serial port drain"));
 
     this.rx = this.port
@@ -207,6 +210,10 @@ class NfcpClient extends EventEmitter {
         }
       }
     }
+  }
+
+  _on_error(error) {
+    console.log("serial port error", error);
   }
 }
 
