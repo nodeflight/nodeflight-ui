@@ -9,10 +9,17 @@ export default (store) => {
     console.log("select", port);
     store.dispatch(device_do_select(port));
   });
+  ipc.on("device-info", (event, pkt) => {
+    if (pkt.cls == "mgmt" && pkt.op == "log_message") {
+      console.log("log", pkt.context, pkt.message);
+    } else {
+      console.log("device-info", pkt);
+    }
+  });
   ipc.on("device-connect", (event, port) => {
-    console.log("connect", port);
+    console.log("device-connect", port);
   });
   ipc.on("device-disconnect", (event, port) => {
-    console.log("disconnect", port);
+    console.log("device-disconnect", port);
   });
 };

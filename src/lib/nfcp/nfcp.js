@@ -7,8 +7,6 @@ import {
 import nfcp_packet from "./nfcp_packet";
 import EventEmitter from "events";
 
-const clsop = (cls, op) => (cls << 8) | op;
-
 const KEEPALIVE_INTERVAL = 1000;
 
 const SERIAL_PORT_CONFIG = {
@@ -17,28 +15,6 @@ const SERIAL_PORT_CONFIG = {
   stopBits: 1,
   dataBits: 8,
   flowControl: false,
-};
-
-const CLS_OP_ID = {
-  mgmt_session_id: clsop(0, 0),
-  mgmt_log_message: clsop(0, 1),
-  mgmt_invalid_class: clsop(0, 2),
-  mgmt_invalid_opeartion: clsop(0, 3),
-};
-
-const CLS_OP_NAME = Object.fromEntries(
-  Object.entries(CLS_OP_ID).map(([k, v]) => [v, k])
-);
-
-const CHR_ESCAPE = [0x17, 0x19, 0x7d, 0x7e];
-
-const pack_msg = (clsop, is_call, payload) => {
-  const id = CLS_OP_ID[clsop];
-  return Buffer.from([
-    ((id & 0x3f00) << 2) | (is_call ? 0x02 : 0x00),
-    id & 0xff,
-    ...payload,
-  ]);
 };
 
 class NfcpClient extends EventEmitter {

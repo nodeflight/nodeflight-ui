@@ -62,7 +62,6 @@ class SerialList extends EventEmitter {
       // No change? Do nothing
       return;
     }
-    console.log("new monitor", device);
 
     if (this._device_monitored_started) {
       // Close previous
