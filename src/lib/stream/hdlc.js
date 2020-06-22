@@ -107,7 +107,6 @@ class HDLCFrameDecoder extends Transform {
       if (boundary_idx == 0) {
         /* Empty packet (no CRC) */
         /* drop packet */
-        this.push({ type: "empty" });
       } else if (data[boundary_idx - 1] == HDLC_ESCAPE_CHAR) {
         /* Contains abort sequence */
         /* drop packet */
