@@ -51,6 +51,7 @@ const nfcp_packet = new BinFmt()
       file_todo_req: new BinFmt(),
       monitor_todo_req: new BinFmt(),
     }
-  );
+  )
+  .end();
 
 export default nfcp_packet;

@@ -24,6 +24,8 @@ const proto_byte_overlap = new BinFmt()
 
 const proto_cstr = new BinFmt().cstr("str");
 
+const proto_byte_end = new BinFmt().uint("x", 8).end();
+
 describe("BinFmt unpack single byte fields", () => {
   it("should unpack zeros", () => {
     assert.deepStrictEqual(
@@ -220,5 +222,25 @@ describe("BinFmt C-type strings", () => {
       ),
       { str: "Test string" }
     );
+  });
+});
+
+describe("BinFmt buffer end check", () => {
+  it("should allow unpack of correct length", () => {
+    assert.deepStrictEqual(proto_byte_end.unpack(Buffer.from([0xcc])), {
+      x: 0xcc,
+    });
+  });
+
+  it("should produce error if buffer is too long", () => {
+    assert.throws(() => {
+      proto_byte_end.unpack(Buffer.from([0xcc, 0xaa]));
+    });
+  });
+
+  it("should produce error if buffer is too short", () => {
+    assert.throws(() => {
+      proto_byte_end.unpack(Buffer.from([]));
+    });
   });
 });

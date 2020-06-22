@@ -180,20 +180,33 @@ class BinFmt {
       {
         _unpack: (buf, offset, obj) => {
           const type_id = selector(obj);
-          if (types[type_id]) {
-            return types[type_id]._unpack(buf, offset, obj);
-          } else {
+          if (!types[type_id]) {
             throw new Error("Unknown type " + type_id);
           }
+          return types[type_id]._unpack(buf, offset, obj);
         },
         _pack: (buf, obj) => {
           const type_id = selector(obj);
-          if (types[type_id]) {
-            types[type_id]._pack(buf, obj);
-          } else {
+          if (!types[type_id]) {
             throw new Error("Unknown type " + type_id);
           }
+          types[type_id]._pack(buf, obj);
         },
+      },
+    ]);
+  }
+
+  end() {
+    return new BinFmt([
+      ...this.fields,
+      {
+        _unpack: (buf, offset, obj) => {
+          if (offset != buf.size) {
+            throw new Error("Expected end of buffer");
+          }
+          return {};
+        },
+        _pack: (buf, obj) => {},
       },
     ]);
   }
