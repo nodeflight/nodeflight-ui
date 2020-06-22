@@ -38,7 +38,7 @@ const pack_msg = (clsop, is_call, payload) => {
 };
 
 class NfcpClient extends EventEmitter {
-  constructor(device) {
+  constructor(path) {
     super({});
 
     this.remote = {
@@ -47,17 +47,17 @@ class NfcpClient extends EventEmitter {
     };
     this.keepalive_timeout = false;
 
-    this.port = new SerialPort(device, {
+    this.port = new SerialPort(path, {
       ...SERIAL_PORT_CONFIG,
-      autoOpen: true,
+      autoOpen: false,
     });
     this.port.on("open", () => this._on_open());
     this.port.on("close", () => this._on_close());
-    this.port.on("error", (error) => this._on_error(error));
-    this.port.on("drain", () => this._on_drain());
+    this.port.on("error", (error) => console.log("serial port error", error));
+    this.port.on("drain", () => console.log("serial port drain"));
 
     this.rx = this.port.pipe(new HDLCFrameDecoder()).pipe(new NFCPUnpack());
-    this.rx.on("data", (buffer) => this._on_data(buffer));
+    this.rx.on("data", (buffer) => this._on_rx(buffer));
 
     this.tx = new NFCPPack();
     this.tx.pipe(new HDLCFrameEncoder()).pipe(this.port);
@@ -66,9 +66,7 @@ class NfcpClient extends EventEmitter {
 
     this.active_calls = {};
 
-    do {
-      this.session_id = Math.floor(Math.random() * Math.floor(0x100000000));
-    } while (this.session_id == 0);
+    this.port.open();
   }
 
   _get_seq_nr() {
@@ -81,7 +79,7 @@ class NfcpClient extends EventEmitter {
     this.port = null;
   }
 
-  get_device() {
+  get_path() {
     return this.port.path;
   }
 
@@ -116,9 +114,7 @@ class NfcpClient extends EventEmitter {
     }
   }
 
-  _on_open() {
-    /* Abort sequence */
-    this.tx.write(false);
+  _send_keepalive() {
     this.send({
       cls: "mgmt",
       op: "session_id",
@@ -126,54 +122,50 @@ class NfcpClient extends EventEmitter {
       session_id: this.session_id,
     })
       .then((result) => {
+        if (result.version && this.remote.connected) {
+          throw new Error("Session restarted");
+        }
+        if (!result.version && !this.remote.connected) {
+          throw new Error("Old session still running?");
+        }
         if (result.version) {
-          console.log("Connected to", result.version);
           this.remote.version = result.version;
           this.remote.connected = true;
-          this._keepalive();
-        } else {
-          throw new Error("Can't start session");
+          this.emit("open");
         }
       })
       .catch((err) => {
         this.close();
-        console.log("Can't send session_id", err);
+        console.log("Can't send keeaplive", err);
       });
   }
 
-  _keepalive() {
-    this.send({
-      cls: "mgmt",
-      op: "session_id",
-      is_call: true,
-      session_id: this.session_id,
-    })
-      .then((result) => {
-        if (result.version) {
-          throw new Error("Session restarted");
-        } else {
-          this.keepalive_timeout = setTimeout(
-            () => this._keepalive(),
-            KEEPALIVE_INTERVAL
-          );
-        }
-      })
-      .catch((err) => {
-        this.close();
-        console.log("Can't send session_id", err);
-      });
+  _on_open() {
+    /* All sessions should start with a new session_id */
+    do {
+      this.session_id = Math.floor(Math.random() * Math.floor(0x100000000));
+    } while (this.session_id == 0);
+
+    /* Abort sequence */
+    this.tx.write(false);
+    this._send_keepalive();
+    this.keepalive_timer = setInterval(
+      () => this._send_keepalive(),
+      KEEPALIVE_INTERVAL
+    );
   }
 
   _on_close() {
-    console.log("_on_close");
-    clearTimeout(this.keepalive_timeout);
-    this.keepalive_timeout = false;
-    this.remote.connected = false;
+    if (this.keepalive_timer) {
+      clearInterval(this.keepalive_timer);
+    }
+    this.keepalive_timer = false;
+    if(this.remote.connected) {
+      this.remote.connected = false;
+      this.emit("close");
+    }
   }
-  _on_error(error) {
-    console.log("_on_error", error);
-  }
-  _on_data(pkt) {
+  _on_rx(pkt) {
     if (pkt.is_resp && pkt.is_call) {
       /* Response, can only be from a call */
       if (this.active_calls[pkt.seq_nr]) {
@@ -212,9 +204,6 @@ class NfcpClient extends EventEmitter {
         }
       }
     }
-  }
-  _on_drain() {
-    console.log("_on_drain");
   }
 }
 

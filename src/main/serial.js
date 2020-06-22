@@ -82,7 +82,7 @@ export const serial_init = (ipc, win) => {
   ipc.on("page-load", (event) => {
     slist.page_load(send);
     if (cli) {
-      send("device-select", sconn.get_device());
+      send("device-select", sconn.get_path());
     } else {
       send("device-select", null);
     }
@@ -91,7 +91,7 @@ export const serial_init = (ipc, win) => {
     await slist.periodic(send);
     if (
       cli &&
-      (!slist.is_device_available(cli.get_device()) || cli.has_timeout())
+      (!slist.is_device_available(cli.get_path()) || cli.has_timeout())
     ) {
       cli.close();
       cli = null;
