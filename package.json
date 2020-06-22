@@ -27,6 +27,7 @@
     "@babel/core": "^7.10.2",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-react": "^7.10.1",
+    "@babel/register": "^7.10.3",
     "browser-sync": "^2.26.7",
     "electron": "^8.3.1",
     "electron-builder": "^22.7.0",
@@ -36,13 +37,15 @@
     "gulp-babel": "^8.0.0",
     "gulp-inject-string": "^1.1.2",
     "gulp-sourcemaps": "^2.6.5",
+    "mocha": "^8.0.1",
     "rimraf": "^3.0.2"
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "develop": "gulp develop",
     "pack": "gulp pack",
-    "install": "electron-rebuild"
+    "install": "electron-rebuild",
+    "test": "mocha --require @babel/register"
   },
   "babel": {
     "presets": [
