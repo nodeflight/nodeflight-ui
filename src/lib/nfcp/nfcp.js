@@ -1,6 +1,7 @@
 import SerialPort from "serialport";
-import { HDLCFrameDecoder, HDLCFrameEncoder } from "./hdlc";
-import { NFCPPack, NFCPUnpack } from "./pktfmt";
+import { HDLCFrameDecoder, HDLCFrameEncoder } from "../stream/hdlc";
+import { BinFmtStreamEncoder, BinFmtStreamDecoder } from "../stream/binfmt_stream";
+import nfcp_packet from "./nfcp_packet";
 import EventEmitter from "events";
 
 const clsop = (cls, op) => (cls << 8) | op;
@@ -56,10 +57,12 @@ class NfcpClient extends EventEmitter {
     this.port.on("error", (error) => console.log("serial port error", error));
     this.port.on("drain", () => console.log("serial port drain"));
 
-    this.rx = this.port.pipe(new HDLCFrameDecoder()).pipe(new NFCPUnpack());
+    this.rx = this.port
+      .pipe(new HDLCFrameDecoder())
+      .pipe(new BinFmtStreamDecoder(nfcp_packet));
     this.rx.on("data", (buffer) => this._on_rx(buffer));
 
-    this.tx = new NFCPPack();
+    this.tx = new BinFmtStreamEncoder(nfcp_packet);
     this.tx.pipe(new HDLCFrameEncoder()).pipe(this.port);
 
     this.last_seq_nr = 0;
@@ -160,7 +163,7 @@ class NfcpClient extends EventEmitter {
       clearInterval(this.keepalive_timer);
     }
     this.keepalive_timer = false;
-    if(this.remote.connected) {
+    if (this.remote.connected) {
       this.remote.connected = false;
       this.emit("close");
     }

@@ -1,4 +1,3 @@
-import { Transform } from "stream";
 import BinFmt from "../binfmt";
 
 const nfcp_packet = new BinFmt()
@@ -54,46 +53,4 @@ const nfcp_packet = new BinFmt()
     }
   );
 
-class NFCPPack extends Transform {
-  constructor(opts = {}) {
-    super({
-      objectMode: true,
-      ...opts,
-    });
-  }
-
-  _transform(chunk, enc, cb) {
-    if (chunk === false) {
-      /* Abort sequence, pass to next layer */
-      this.push(false);
-      cb();
-      return;
-    }
-    this.push(nfcp_packet.pack(chunk));
-    cb();
-  }
-
-  _flush(cb) {
-    cb();
-  }
-}
-
-class NFCPUnpack extends Transform {
-  constructor(opts = {}) {
-    super({
-      objectMode: true,
-      ...opts,
-    });
-  }
-
-  _transform(chunk, enc, cb) {
-    this.push(nfcp_packet.unpack(chunk));
-    cb();
-  }
-
-  _flush(cb) {
-    cb();
-  }
-}
-
-export { NFCPPack, NFCPUnpack };
+export default nfcp_packet;
