@@ -44,11 +44,15 @@ export const serial_init = (ipc, win) => {
     }
   });
 
-  ipc.handle("device-send", async (pkt) => {
-    if (cli) {
-      return await cli.send(pkt);
-    } else {
-      throw new Error("not connected");
+  ipc.handle("device-send", async (event, pkt) => {
+    try {
+      if (cli) {
+        return await cli.send(pkt);
+      } else {
+        throw new Error("not connected");
+      }
+    } catch (err) {
+      return { cls: "error", error: err };
     }
   });
 
@@ -60,5 +64,11 @@ export const serial_init = (ipc, win) => {
   ipc.on("page-load", (event) => {
     send("device-list-update", cur_list);
     send("device-select", cur_select);
+    if (cli) {
+      /* Reset connection */
+      /* TODO: Don't send device-disconnect for previous connection */
+      cli.close();
+      cli = connect(cur_select, send);
+    }
   });
 };

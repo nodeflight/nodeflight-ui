@@ -8,6 +8,7 @@ import nfcp_packet from "./nfcp_packet";
 import EventEmitter from "events";
 
 const KEEPALIVE_INTERVAL = 1000;
+const CALL_TIMEOUT = 5; /* In number of keepalive intervals */
 
 const SERIAL_PORT_CONFIG = {
   baudRate: 230400,
@@ -81,10 +82,15 @@ class NfcpClient extends EventEmitter {
 
     if (pkt_filled.is_call) {
       call_promise = new Promise((resolve, reject) => {
-        this.active_calls[pkt_filled.seq_nr] = { resolve, reject };
+        this.active_calls[pkt_filled.seq_nr] = {
+          resolve,
+          reject,
+          timeout: CALL_TIMEOUT,
+        };
       });
     }
 
+    // console.log("NFCP TX", pkt_filled);
     await new Promise((resolve, reject) =>
       this.tx.write(pkt_filled, undefined, resolve)
     );
@@ -93,6 +99,17 @@ class NfcpClient extends EventEmitter {
       return await call_promise;
     } else {
       return null;
+    }
+  }
+
+  _timeout_tick() {
+    const active_seq_nrs = Object.keys(this.active_calls);
+    for(const seq_nr of active_seq_nrs) {
+      this.active_calls[seq_nr].timeout -= 1;
+      if(this.active_calls[seq_nr].timeout <= 0) {
+        this.active_calls[seq_nr].reject(new Error("call timeout"));
+        delete this.active_calls[seq_nr];
+      }
     }
   }
 
@@ -120,6 +137,8 @@ class NfcpClient extends EventEmitter {
         this.close();
         console.log("Can't send keeaplive", err);
       });
+    
+      this._timeout_tick();
   }
 
   _on_open() {
@@ -148,6 +167,7 @@ class NfcpClient extends EventEmitter {
     }
   }
   _on_rx(pkt) {
+    // console.log("NFCP RX", pkt);
     if (pkt.is_resp && pkt.is_call) {
       /* Response, can only be from a call */
       if (this.active_calls[pkt.seq_nr]) {

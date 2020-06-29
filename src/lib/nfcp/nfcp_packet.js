@@ -111,6 +111,7 @@ const nfcp_packet = new BinFmt()
         .uint("obj_id", 16)
         .enum("field_type", 8, {
           md_info: 0,
+          arg_info: 1,
         })
         .uint("field_id", 16),
       cap_get_md_resp: new BinFmt()
