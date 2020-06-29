@@ -15,10 +15,6 @@ const useStyles = makeStyles({
   },
 });
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
 export default ({ ports, selected, onSelect }) => {
   const classes = useStyles();
   let port_list = Object.values(ports);
