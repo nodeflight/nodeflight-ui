@@ -55,7 +55,6 @@ const device_connect = (port) => async (dispatch) => {
       return;
     }
     device_info.rs[rs_info.name] = {
-      name: rs_info.name,
       rs_type: rs_info.rs_type,
       num_avail: rs_info.num_avail,
     };
@@ -98,7 +97,6 @@ const device_connect = (port) => async (dispatch) => {
       });
     }
     device_info.pp[pp_info.name] = {
-      name: pp_info.name,
       pp_type: pp_info.pp_type,
       num_args: pp_info.num_args,
       arg_opts: arg_opts,
@@ -144,7 +142,6 @@ const device_connect = (port) => async (dispatch) => {
     }
 
     device_info.md[md_info.name] = {
-      name: md_info.name,
       num_args: md_info.num_args,
       args: args,
     };
