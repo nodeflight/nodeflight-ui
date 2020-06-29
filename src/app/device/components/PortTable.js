@@ -25,63 +25,64 @@ export default ({ ports, selected, onSelect }) => {
   port_list.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 
   return (
-    <TableContainer component={Paper}>
-      <Table className={classes.table} size="small" aria-label="a dense table">
-        <TableHead>
-          <TableRow>
-            <TableCell padding="checkbox"></TableCell>
-            <TableCell>Port</TableCell>
-            <TableCell>Manufacturer</TableCell>
-            <TableCell>Vendor/product</TableCell>
-            <TableCell>serial#</TableCell>
-            <TableCell>location</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          <TableRow key={-1} selected={selected == null}>
-            <TableCell padding="checkbox">
-              <Radio
-                value={false}
-                checked={selected == null}
-                onClick={() => onSelect(null)}
-              />
-            </TableCell>
-            <TableCell colSpan={5}>
-              Disconnected
-            </TableCell>
-          </TableRow>
-          {port_list.map((p, i) => (
-            <TableRow key={i} selected={p.path == selected}>
+    <React.Fragment>
+      <h1>Ports</h1>
+      <TableContainer component={Paper}>
+        <Table className={classes.table} size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell padding="checkbox"></TableCell>
+              <TableCell>Port</TableCell>
+              <TableCell>Manufacturer</TableCell>
+              <TableCell>Vendor/product</TableCell>
+              <TableCell>serial#</TableCell>
+              <TableCell>location</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow key={-1} selected={selected == null}>
               <TableCell padding="checkbox">
                 <Radio
-                  value={p.path}
-                  checked={p.path == selected}
-                  onClick={() => onSelect(p.path)}
+                  value={false}
+                  checked={selected == null}
+                  onClick={() => onSelect(null)}
                 />
               </TableCell>
-              <TableCell component="th" scope="row">
-                {p.path}
-              </TableCell>
-              {p.disconnected ? (
-                <React.Fragment>
-                  <TableCell colSpan={4} align={"center"}>
-                    currently not available
-                  </TableCell>
-                </React.Fragment>
-              ) : (
-                <React.Fragment>
-                  <TableCell>{p.manufacturer || ""}</TableCell>
-                  <TableCell>
-                    {p.vendorId ? p.vendorId + ":" + p.productId : ""}
-                  </TableCell>
-                  <TableCell>{p.serialNumber || ""}</TableCell>
-                  <TableCell>{p.locationId || ""}</TableCell>
-                </React.Fragment>
-              )}
+              <TableCell colSpan={5}>Disconnected</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+            {port_list.map((p, i) => (
+              <TableRow key={i} selected={p.path == selected}>
+                <TableCell padding="checkbox">
+                  <Radio
+                    value={p.path}
+                    checked={p.path == selected}
+                    onClick={() => onSelect(p.path)}
+                  />
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {p.path}
+                </TableCell>
+                {p.disconnected ? (
+                  <React.Fragment>
+                    <TableCell colSpan={4} align={"center"}>
+                      currently not available
+                    </TableCell>
+                  </React.Fragment>
+                ) : (
+                  <React.Fragment>
+                    <TableCell>{p.manufacturer || ""}</TableCell>
+                    <TableCell>
+                      {p.vendorId ? p.vendorId + ":" + p.productId : ""}
+                    </TableCell>
+                    <TableCell>{p.serialNumber || ""}</TableCell>
+                    <TableCell>{p.locationId || ""}</TableCell>
+                  </React.Fragment>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </React.Fragment>
   );
 };
