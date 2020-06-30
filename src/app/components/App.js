@@ -7,12 +7,14 @@ import { Tabs, Tab } from "@material-ui/core";
 
 import TabAbout from "./TabAbout";
 import TabDevice from "../device/components/Tab";
-import TabConfig from "../config/components/Tab";
+import TabConfig from "../config/components/TabConfig";
+import TabCapabilities from "../config/components/TabCapabilities";
 import TabMonitor from "../monitor/components/Tab";
 
 const tabcontents = {
   about: () => <TabAbout />,
   device: () => <TabDevice />,
+  capabilities: () => <TabCapabilities />,
   config: () => <TabConfig />,
   monitor: () => <TabMonitor />,
 };
@@ -22,6 +24,7 @@ const App = ({ tab_id, setTab }) => (
     <Tabs value={tab_id} onChange={(ev, val) => setTab(val)}>
       <Tab value="about" label="About" />
       <Tab value="device" label="Device" />
+      <Tab value="capabilities" label="Capabilities" />
       <Tab value="config" label="Configuration" />
       <Tab value="monitor" label="Monitoring" />
     </Tabs>
