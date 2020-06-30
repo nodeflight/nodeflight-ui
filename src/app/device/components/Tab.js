@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import PortTable from "./PortTable";
-import CapTable from "./CapTable";
+import CapTable from "../../components/CapTable";
 
 import { device_select } from "../actions/serial";
 

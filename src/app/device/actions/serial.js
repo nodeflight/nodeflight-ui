@@ -32,7 +32,7 @@ const device_connect = (port) => async (dispatch) => {
   }
 
   let device_info = {
-    connected: true,
+    valid: false,
     cpu_type: device_cap_info.cpu_type,
     cpu_speed_mhz: device_cap_info.cpu_speed_mhz,
     rs: {},
@@ -146,6 +146,8 @@ const device_connect = (port) => async (dispatch) => {
       args: args,
     };
   }
+
+  device_info.valid = true;
 
   dispatch({
     type: "DEVICE_CAP_SET",

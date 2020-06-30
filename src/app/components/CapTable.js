@@ -16,7 +16,7 @@ const useStyles = makeStyles({
 
 export default ({ cap }) => {
   const classes = useStyles();
-  if (!cap.connected) {
+  if (!cap.valid) {
     return <React.Fragment></React.Fragment>;
   }
 
