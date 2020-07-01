@@ -6,10 +6,10 @@ import { appSetTab } from "../actions/app";
 import { Tabs, Tab } from "@material-ui/core";
 
 import TabAbout from "./TabAbout";
-import TabDevice from "../device/components/Tab";
-import TabConfig from "../config/components/TabConfig";
-import TabCapabilities from "../config/components/TabCapabilities";
-import TabMonitor from "../monitor/components/Tab";
+import TabDevice from "./TabDevice";
+import TabConfig from "./TabConfig";
+import TabCapabilities from "./TabCapabilities";
+import TabMonitor from "./TabMonitor";
 
 const tabcontents = {
   about: () => <TabAbout />,

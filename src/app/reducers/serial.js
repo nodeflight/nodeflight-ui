@@ -1,5 +1,5 @@
 const default_cap = {
-  connected: false,
+  valid: false,
   cpu_type: "none",
   cpu_speed_mhz: 1,
   rs: {},

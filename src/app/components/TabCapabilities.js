@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 
-import CapTable from "../../components/CapTable";
+import CapTable from "./CapTable";
 
 import { config_cap_clear, config_cap_set } from "../actions/config";
 
