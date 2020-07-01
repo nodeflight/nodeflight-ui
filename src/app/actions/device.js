@@ -138,6 +138,7 @@ const device_connect = (port) => async (dispatch) => {
       }
       args[j] = {
         type: String.fromCharCode(arg_info.arg_type),
+        optional: false,
       };
     }
 

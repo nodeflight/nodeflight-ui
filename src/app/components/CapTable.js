@@ -54,14 +54,18 @@ export default ({ cap }) => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Num args</TableCell>
+              <TableCell>Args</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {md_names.map((name) => (
               <TableRow key={name} selected={false}>
                 <TableCell>{name}</TableCell>
-                <TableCell>{cap.md[name].num_args}</TableCell>
+                <TableCell>
+                  {cap.md[name].args
+                    .map((a) => a.type + (a.optional ? " (optional)" : ""))
+                    .join(", ")}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
