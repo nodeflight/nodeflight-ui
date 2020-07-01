@@ -3,7 +3,7 @@ import {
   device_connect,
   device_disconnect,
   device_do_select,
-} from "./actions/serial";
+} from "./actions/device";
 import { ipcRenderer as ipc } from "electron";
 
 export default (store) => {

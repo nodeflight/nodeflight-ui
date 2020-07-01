@@ -1,6 +1,6 @@
 import { combineReducers } from "redux";
 import app from "./app";
-import serial from "./serial";
+import device from "./device";
 import config from "./config";
 
-export default combineReducers({ app, serial, config });
+export default combineReducers({ app, device, config });

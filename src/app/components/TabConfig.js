@@ -5,7 +5,7 @@ const Tab = ({ ports }) => (
   <h1>Configuration</h1>
 );
 const mapStateToProps = (state) => ({
-  ports: state.serial.ports,
+  ports: state.device.ports,
 });
 
 const mapDispatchToProps = (dispatch) => ({});

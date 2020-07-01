@@ -22,7 +22,7 @@ const Tab = ({ cap, dev_cap, onCapClear, onCapLoadFromDevice }) => (
 );
 const mapStateToProps = (state) => ({
   cap: state.config.cap,
-  dev_cap: state.serial.cap,
+  dev_cap: state.device.cap,
 });
 
 const mapDispatchToProps = (dispatch) => ({

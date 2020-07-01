@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import PortTable from "./PortTable";
 import CapTable from "./CapTable";
 
-import { device_select } from "../actions/serial";
+import { device_select } from "../actions/device";
 
 const TabConnect = ({ ports_available, port, cap, onSelect }) => (
   <React.Fragment>
@@ -12,9 +12,9 @@ const TabConnect = ({ ports_available, port, cap, onSelect }) => (
   </React.Fragment>
 );
 const mapStateToProps = (state) => ({
-  ports_available: state.serial.ports_available,
-  port: state.serial.port,
-  cap: state.serial.cap,
+  ports_available: state.device.ports_available,
+  port: state.device.port,
+  cap: state.device.cap,
 });
 
 const mapDispatchToProps = (dispatch) => ({
