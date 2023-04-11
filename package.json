@@ -37,7 +37,7 @@
     "gulp-babel": "^8.0.0",
     "gulp-inject-string": "^1.1.2",
     "gulp-sourcemaps": "^2.6.5",
-    "mocha": "^8.4.0",
+    "mocha": "^10.2.0",
     "rimraf": "^3.0.2"
   },
   "scripts": {
