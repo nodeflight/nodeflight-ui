@@ -32,7 +32,7 @@
     "electron": "^24.0.0",
     "electron-builder": "^23.6.0",
     "electron-devtools-installer": "^3.0.0",
-    "electron-rebuild": "^1.11.0",
+    "electron-rebuild": "^3.2.9",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-inject-string": "^1.1.2",
